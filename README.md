@@ -72,9 +72,9 @@ It provides the following modules:
 
 **For all setups (bare-metal & container VMs):**
 1. **Task scheduler** – Provides cron functionality.
-2. **Log handler** – 
+2. **Log handler** – wraps logging facility
 3. **Web-configurator & REST API** – Administrative module for managing configuration over web/api.
-4. **Messaging [e-mail, MQTT]** – 
+4. **Messaging [e-mail, MQTT]** – backend agnostic messaging provider
 5. Exception handling and automatic restarts of services
 
 It can be thought as the platform for launching Python projects.

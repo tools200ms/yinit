@@ -1,6 +1,7 @@
 
 services:
   debian:
+    # Cython
     image: debian
     volumes:
       - ./Makefile:/usr/src/yinit/Makefile:ro
@@ -21,6 +22,7 @@ services:
       - /dev/fuse
 
   alpine:
+    # Cytthon with musl
     image: alpine
     volumes:
       - ./Makefile:/usr/src/yinit/Makefile:ro
@@ -41,6 +43,7 @@ services:
       - /dev/fuse
 
   sandbox:
+    # MicroPython
     build:
       context: sandbox
     network_mode: host

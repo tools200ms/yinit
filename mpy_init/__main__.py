@@ -3,7 +3,6 @@ import sys
 
 import mpy_init
 from mpy_init.core.logger import Logger
-#import traceback
 
 from mpy_init.core.logic.graph_builder import GraphBuilder, GraphBuilderUnitRedefinitionError
 from mpy_init.core.node_prototype import NodeSet

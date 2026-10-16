@@ -1,0 +1,51 @@
+diff --git a/ports/unix/unix_mphal.c b/ports/unix/unix_mphal.c
+index d04e0b96e..7d8badfdb 100644
+--- a/ports/unix/unix_mphal.c
++++ b/ports/unix/unix_mphal.c
+@@ -46,6 +46,32 @@
+ #ifndef _WIN32
+ #include <signal.h>
+ 
++
++static void sighandler_sigterm(int signum) {
++    if (signum == SIGTERM) {
++        #if MICROPY_ASYNC_KBD_INTR
++        #if MICROPY_PY_THREAD_GIL
++        // Since signals can occur at any time, we may not be holding the GIL when
++        // this callback is called, so it is not safe to raise an exception here
++        #error "MICROPY_ASYNC_KBD_INTR and MICROPY_PY_THREAD_GIL are not compatible"
++        #endif
++        mp_obj_exception_clear_traceback(MP_OBJ_FROM_PTR(&MP_STATE_VM(mp_kbd_exception)));
++        sigset_t mask;
++        sigemptyset(&mask);
++        // On entry to handler, its signal is blocked, and unblocked on
++        // normal exit. As we instead perform longjmp, unblock it manually.
++        sigprocmask(SIG_SETMASK, &mask, NULL);
++        nlr_raise(MP_OBJ_FROM_PTR(&MP_STATE_VM(mp_kbd_exception)));
++        #else
++        if (MP_STATE_MAIN_THREAD(mp_pending_exception) == MP_OBJ_FROM_PTR(&MP_STATE_VM(mp_kbd_exception))) {
++            // this is the second time we are called, so die straight away
++            exit(1);
++        }
++        mp_sched_keyboard_interrupt();
++        #endif
++    }
++}
++
+ static void sighandler(int signum) {
+     if (signum == SIGINT) {
+         #if MICROPY_ASYNC_KBD_INTR
+@@ -76,6 +102,13 @@ void mp_hal_set_interrupt_char(char c) {
+     // configure terminal settings to (not) let ctrl-C through
+     if (c == CHAR_CTRL_C) {
+         #ifndef _WIN32
++        // Install SIGTERM handler
++        struct sigaction sa_term;
++        sa_term.sa_flags = 0;
++        sa_term.sa_handler = sighandler_sigterm;
++        sigemptyset(&sa_term.sa_mask);
++        sigaction(SIGTERM, &sa_term, NULL);
++
+         // enable signal handler
+         struct sigaction sa;
+         sa.sa_flags = 0;
